@@ -8,20 +8,16 @@ def test1_data():
     return text
 
 def test_parse_input(test1_data):
-    codes, code_len = parse_data(test1_data)
-    assert type(codes) == list
-    assert codes[0] == 4
-    assert codes[11] == 10
-    assert len(codes) == 12
-    assert code_len == 5
+    drawing, boards = parse_data(test1_data)
+    assert drawing[0] == 7
+    assert boards[0]['nums'][0,0] == 22
+    assert boards[1]['nums'][2,1] == 8
+    assert boards[2]['nums'][2,4] == 20
+    assert boards[1]['marks'][3,3] == False
+    assert boards[1]['marks'][3,4] == 0
 
 def test_all(test1_data):
-    diagnostics, code_len = parse_data(test1_data)
-    gr = get_gamma_rate(diagnostics, code_len)
-    assert gr == 22
-    er = get_epsilon_rate(gr, code_len)
-    assert er == 9
-    ogr = get_ox_gen_rating(diagnostics, code_length=code_len)
-    assert ogr == 23
-    co2r = get_co2_scrubber_rating(diagnostics, code_length=code_len)
-    assert co2r == 10
+    drawing, boards = parse_data(test1_data)
+    winners = run_rounds(boards, drawing)
+    assert winners[0][2] == 4512
+    assert winners[-1][2] == 1924
