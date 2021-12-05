@@ -63,7 +63,7 @@ def main():
         data = f.read()
     drawing, boards = parse_data(data)
     
-    #Part 1
+    #Solutions
     winners = run_rounds(boards, drawing)
     logger.info(f"Puzzle1: Winning Score: {winners[0][2]}")
     logger.info(f"Puzzel2: Worst Board Score: {winners[-1][2]}")
