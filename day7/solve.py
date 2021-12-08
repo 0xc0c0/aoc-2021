@@ -7,96 +7,58 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 
 def parse_data(text_data):
-    text_data = text_data.strip().split(',')
-    fish = [int(x) for x in text_data]
-    logger.debug(fish)
-    return fish
+    data = text_data.strip('\n').strip().split(',')
+    data = [int(x) for x in data]
+    data.sort()
+    return data
 
-def parse_data_better(text_data):
-    text_data = text_data.strip().split(',')
-    tallies = [0] * 9
-    fish = [int(x) for x in text_data]
-    for f in fish:
-        tallies[f] += 1
-    return tallies
+def complex(num):
+    return int(num * (num + 1) / 2)
 
-def age_fish(fish):
-    stop = len(fish)
-    for i, f in enumerate(fish):
-        if i == stop:
-            break
-        if f == 0:
-            fish[i] = 6
-            fish.append(8)
-        else:
-            fish[i] -= 1
-            
-def age_fish_better(tallies):
-    saved_0 = 0
-    for age, tally in enumerate(tallies):
-        if age == 0:
-           saved_0 = tally
-        if age < 8:
-           tallies[age] = tallies[age + 1]
-        if age == 6:
-            tallies[age] += saved_0
-        if age == 8: 
-            tallies[age] = saved_0
-            
-def age_fish_7(fish):
-    stop = len(fish)
-    for i, f in enumerate(fish):
-        if i == stop:
-            break
-        if f >= 7:
-            fish[i] = f - 7
-        else:
-            fish.append(f + 2)
+def get_fuel_cost(data, align_pos, simple=True):
+    logger.debug(f"checking fuel cost for alignment to value {align_pos}, simple={simple}")
+    if simple:
+        return sum([abs(align_pos - x) for x in data])
+    else:
+        return sum([complex(abs(align_pos - x)) for x in data])
 
-def age_fish_7_better(tallies):
-    saved_tallies = tallies.copy()
+def find_min_fuel_cost(data, median=True):
+    if median:
+        starting_i = int(len(data)/2)
+    else:
+        starting_i = int(sum(data)/len(data))
+    starting_val = data[starting_i]
+    starting = get_fuel_cost(data, starting_val, median)
+    low_val = starting_val
+    current = low = starting
+    while current <= low:
+        low = current
+        low_val -= 1
+        current = get_fuel_cost(data, low_val, median)
     
-    #update copies + 2 (modeled after 7 rounds)
-    for i in range(7):
-        tallies[i + 2] += saved_tallies[i]
-       
-    #adjust for 7s and 8s
-    for i in range(7,9):
-        tallies[i] -= saved_tallies[i]
-        tallies[i - 7] += saved_tallies[i]
-
-def age_rounds(fish, rounds):
-    runs_1 = rounds % 7
-    runs_7 = math.floor(rounds / 7)
-    for i in range(runs_7):
-        age_fish_7(fish)
-    for i in range(runs_1):
-        age_fish(fish)
-
-def age_rounds_better(tallies, rounds):
-    logger.debug(f"tallies: {tallies}, rounds: {rounds}")
-    runs_1 = rounds % 7
-    runs_7 = math.floor(rounds / 7)
-    for i in range(runs_7):
-        age_fish_7_better(tallies)
-    for i in range(runs_1):
-        age_fish_better(tallies)
-    logger.debug(f"new tallies: {tallies}")
-
+    high_val = starting_val
+    current = high = starting
+    while current <= high:
+        high = current
+        high_val += 1
+        current = get_fuel_cost(data, high_val, median)
+    
+    return min([low,high])
+    
 def main():
     logger.setLevel(level=logging.INFO)
     with open("input.txt") as f:
         data = f.read()
        
     #Part 1  Full Simulation Algorithm
-    fish = parse_data(data)
-    age_rounds(fish, rounds=80)
-    logger.info(f"Puzzle1: Fish: {len(fish)}")
+    data = parse_data(data)
+    logger.info(f"Puzzle1: Lowest: {find_min_fuel_cost(data)}")
+    logger.info(f"Puzzle2: Complex: {find_min_fuel_cost(data, median=False)}")
     
     #Part 2  Better Algorithm
-    tallies = parse_data_better(data)
-    age_rounds_better(tallies, rounds=256)
-    logger.info(f"Puzzle2: Fish: {sum(tallies)}")
+    #tallies = parse_data_better(data)
+    #age_rounds_better(tallies, rounds=256)
+    #logger.info(f"Puzzle2: Fish: {sum(tallies)}")
 
 if __name__ == '__main__':
     main()
