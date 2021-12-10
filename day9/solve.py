@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 import os
-import math
+from functools import reduce
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 logger = logging.getLogger(__name__)
@@ -56,7 +56,42 @@ def find_low_points(heightmap):
 
 def get_risk_level(heightmap, points):
     return sum([heightmap[r][c] + 1 for (r,c) in points])
-    
+
+def map_basin_surroundings(heightmap, point, basinmap):
+    r = point[0]
+    c = point[1]
+    if r < 0 or r > len(heightmap) - 1:
+        return
+    if c < 0 or c > len(heightmap[0]) - 1:
+        return
+    if heightmap[r][c] == 9:
+        return
+    if basinmap[r,c] == True:
+        return
+    else:
+        basinmap[r,c] = True
+        map_basin_surroundings(heightmap, (r - 1, c), basinmap)
+        map_basin_surroundings(heightmap, (r + 1, c), basinmap)
+        map_basin_surroundings(heightmap, (r, c - 1), basinmap)
+        map_basin_surroundings(heightmap, (r, c + 1), basinmap)
+
+def map_basin_size(heightmap, point):
+    #initialize basinmap
+    rows = len(heightmap)
+    cols = len(heightmap[0])
+    basinmap = np.array([False]*rows*cols).reshape(rows, cols)
+    map_basin_surroundings(heightmap, point, basinmap)
+    return len(list(zip(*np.where(basinmap == True))))
+
+def get_top_basin_sizes(heightmap, points):
+    sizes = []
+    for point in points:
+        size = map_basin_size(heightmap, point)
+        sizes.append(size)
+    sizes.sort()
+    logger.debug(f"sizes are: {sizes}")
+    return reduce(lambda x, y: x * y, sizes[-3:])
+
 def main():
     logger.setLevel(level=logging.INFO)
     with open("input.txt") as f:
@@ -66,7 +101,7 @@ def main():
     pts = find_low_points(heightmap=hm)
     answer = get_risk_level(heightmap=hm, points=pts)
     logger.info(f"Puzzle1: Lowest: {answer}")
-    answer = 0
+    answer = get_top_basin_sizes(hm, pts)
     logger.info(f"Puzzle2: Complex: {answer}")
     
 if __name__ == '__main__':

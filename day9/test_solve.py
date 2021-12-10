@@ -18,3 +18,4 @@ def test_all(test_data):
     heightmap = parse_data(test_data)
     points = find_low_points(heightmap)
     assert get_risk_level(heightmap, points) == 15
+    assert get_top_basin_sizes(heightmap, points) == 1134
