@@ -11,13 +11,17 @@ source venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-## To Activate the Virtual Python Environment (keeps package management clean if more imports are needed later)
+## To Activate the Virtual Python Environment 
+
+(keeps package management clean if more imports are needed later)
 
 ```
 source venv/bin/activate
 ```
 
-## To Run the test cases (typically the descriptions in the puzzles for the day with simple data and answers)
+## To Run the test cases 
+
+(typically the descriptions in the puzzles for the day with simple data and answers)
 
 ```
 pytest -o log_cli=true -o log_cli_level="INFO" -v
