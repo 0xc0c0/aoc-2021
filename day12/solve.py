@@ -26,11 +26,29 @@ def parse_data(text_data):
 def is_big_cave(cave):
     return cave.isupper()
 
-def get_traversal(paths, caves, found_traversals=None):
-    if not found_traversals:
-        found_traversals = list()
-    cur_cave = 'start'
-    #look
+def count_full_traversals(completed_traversals):
+    count = 0
+    for t in completed_traversals:
+        if t[0] == 'start':
+            count += 1
+    return count
+
+def get_new_traversal(directed_paths, caves, tmp_path=list(), cur_cave='start', found_traversals=list()):
+    new_path = tmp_path + [cur_cave]
+    
+    #check for invalid condition (hitting a small cave twice)
+    if not is_big_cave(cur_cave) and cur_cave in tmp_path:
+        return
+    
+    #check if we've already done this path
+    if cur_cave == 'end':
+        if (new_path not in found_traversals):
+            found_traversals.append(new_path)
+    else:
+        next_cave_options = caves[cur_cave]
+        for opt in next_cave_options:
+                get_new_traversal(directed_paths=directed_paths, caves=caves, tmp_path=new_path, cur_cave=opt, found_traversals=found_traversals)
+    
 
 def main():
     logger.setLevel(level=logging.INFO)
