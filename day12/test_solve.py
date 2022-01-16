@@ -41,7 +41,10 @@ def test_parse_input(test_data, test2_data, test3_data):
   
 def test_all(test_data, test2_data, test3_data):
     paths, caves = parse_data(test_data)
+    assert len(paths) == 10
     
     paths, caves = parse_data(test2_data)
+    assert len(paths) == 19
     
     paths, caves = parse_data(test3_data)
+    assert len(paths) == 226

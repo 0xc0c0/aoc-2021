@@ -29,6 +29,7 @@ def is_big_cave(cave):
 def count_full_traversals(completed_traversals):
     count = 0
     for t in completed_traversals:
+        logger.debug(t)
         if t[0] == 'start':
             count += 1
     return count
@@ -39,6 +40,9 @@ def get_new_traversal(directed_paths, caves, tmp_path=list(), cur_cave='start', 
     #check for invalid condition (hitting a small cave twice)
     if not is_big_cave(cur_cave) and cur_cave in tmp_path:
         return
+    
+    for c in tmp_path:
+        pass
     
     #check if we've already done this path
     if cur_cave == 'end':
