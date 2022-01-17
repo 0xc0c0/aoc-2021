@@ -14,54 +14,56 @@ def get_file_data(fn='input.txt'):
 def parse_data(text_data):
     #parse into list of links
     paths = [[x for x in line.split('-')] for line in text_data.strip('\n').strip().split('\n')]
-    directed_paths = paths + [path[::-1] for path in paths]
+    directed_links = paths + [path[::-1] for path in paths]
     #update node dictionary for each end
     caves = dict()
-    for a,b in directed_paths:
+    for a,b in directed_links:
         if a not in caves:
             caves[a] = list()
         caves[a].append(b)
-    return directed_paths, caves
+    return caves
 
 def is_big_cave(cave):
     return cave.isupper()
 
-def count_full_traversals(completed_traversals):
-    count = 0
-    for t in completed_traversals:
-        logger.debug(t)
-        if t[0] == 'start':
-            count += 1
-    return count
-
-def get_new_traversal(directed_paths, caves, tmp_path=list(), cur_cave='start', found_traversals=list()):
-    new_path = tmp_path + [cur_cave]
+def get_all_paths(saved_path, cur_cave, tgt_cave, all_caves, twice_used=True):
+    if cur_cave == tgt_cave:
+        saved_path.append(cur_cave)
+        logger.debug(f"Completed path: {saved_path}")
+        return [saved_path]
     
-    #check for invalid condition (hitting a small cave twice)
-    if not is_big_cave(cur_cave) and cur_cave in tmp_path:
-        return
-    
-    for c in tmp_path:
-        pass
-    
-    #check if we've already done this path
-    if cur_cave == 'end':
-        if (new_path not in found_traversals):
-            found_traversals.append(new_path)
-    else:
-        next_cave_options = caves[cur_cave]
-        for opt in next_cave_options:
-                get_new_traversal(directed_paths=directed_paths, caves=caves, tmp_path=new_path, cur_cave=opt, found_traversals=found_traversals)
-    
+    all_paths = list()
+    for connected_cave in all_caves[cur_cave]:
+        # can't re-use start
+        if connected_cave == 'start':
+            continue
+        
+        # skip small caves that have already been traversed
+        # one ability to use a little cave twice, but only one
+        local_twice_used = twice_used
+        if connected_cave in saved_path and not is_big_cave(connected_cave):
+            if local_twice_used:
+                continue
+            else:
+                local_twice_used = True
+        new_saved_path = saved_path + [cur_cave]
+        new_paths = get_all_paths(new_saved_path, connected_cave, tgt_cave, all_caves, local_twice_used)
+        #logger.debug(f"Partial paths: {new_paths}")
+        for path in new_paths:
+            if path:
+                all_paths.append(path)
+    return all_paths
 
 def main():
     logger.setLevel(level=logging.INFO)
     data = get_file_data()
-    graph = parse_data(data)
-    
-    answer = 0
+    caves = parse_data(data)
+    all = get_all_paths(list(), 'start', 'end', caves)
+    answer = len(all)
     logger.info(f"Puzzle1: <SUMMARY>: {answer}")
-    answer = 0
+    
+    all = get_all_paths(list(), 'start', 'end', caves, twice_used=False)
+    answer = len(all)
     logger.info(f"Puzzle2: <SUMMARY>: {answer}")
     
 if __name__ == '__main__':
