@@ -1,7 +1,5 @@
 import logging
 import numpy as np
-import os
-import math
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 logger = logging.getLogger(__name__)
@@ -20,7 +18,7 @@ def main():
     with open("input.txt") as f:
         data = f.read()
        
-    grid = parse_data(data)
+    data = parse_data(data)
     answer = 0
     logger.info(f"Puzzle1: <SUMMARY>: {answer}")
     answer = 0
