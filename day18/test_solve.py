@@ -9,11 +9,14 @@ def test_data():
     return text
 
 def test_parse_input(test_data):
-    grid = parse_data(test_data)
-    assert type(grid) == np.ndarray
-    assert grid[1,3] == 5
-    assert grid.ndim == 2
-    assert grid.shape == (10,10)
+    snailnums = parse_data(test_data)
+    assert type(snailnums) == list
+    assert snailnums[0][0][0][1][0] == 5
+    assert snailnums[2][0] == 6
+    assert snailnums[5][1][0][1][1] == 7
   
 def test_all(test_data):
-    grid = parse_data(test_data)
+    snailnums = parse_data(test_data)
+    i1, i2, i3, i4, found = find_leftmost_deep_recursive(snailnums)
+    assert found == [5,8]
+    assert snailnums[i1][i2][i3][i4] == found
