@@ -8,11 +8,10 @@ def test_data():
     return text
 
 def test_parse_input(test_data):
-    grid = parse_data(test_data)
-    assert type(grid) == np.ndarray
-    assert grid[1,3] == 5
-    assert grid.ndim == 2
-    assert grid.shape == (10,10)
+    scanner_data = parse_data(test_data)
+    assert len(scanner_data) == 5
+    assert scanner_data[2][0][0] == 649
+    assert scanner_data[4][2][2] == -461
   
 def test_all(test_data):
-    grid = parse_data(test_data)
+    scanner_data = parse_data(test_data)
