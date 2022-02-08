@@ -18,5 +18,10 @@ def test_all(test_data):
     dists_sq = get_scanned_beacon_distances(scans)
     test_01 = (404-528) ** 2 + (643-588) ** 2 + (901+409) ** 2
     assert (dists_sq.loc[0,0,1] == test_01).all()
+    assert len(get_rotations()) == 48
     
-    total, i = get_max_overlapping_beacons(dists_sq)
+    offsets = align_scans(scans)
+    assert get_unique_beacons(scans) == 79
+    
+    d = find_farthest_Manhattan_distance(offsets)
+    assert d == 3621
