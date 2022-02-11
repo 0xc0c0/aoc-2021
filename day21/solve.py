@@ -5,8 +5,8 @@ import numpy as np
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 
-QUANTUM_WINS_P1 = 0
-QUANTUM_WINS_P2 = 0
+GAMES = dict()
+TRACE = 0
 
 def get_file_data(fn='input.txt'):
     with open(fn) as f:
@@ -27,7 +27,7 @@ def roll_dice(dice_state=-1, times=3):
     for i in range(times):
         dice_state = (dice_state + 1) % 100
         distance += dice_state + 1
-        logger.debug(f"dice_state: {dice_state}, distance: {distance}")
+        # logger.debug(f"dice_state: {dice_state}, distance: {distance}")
     return dice_state, distance
 
 def turn(player_position, dice_state):
@@ -63,51 +63,74 @@ def score(player_position, distance):
     player_position = (player_position + distance) % 10
     return player_position + 1, player_position
 
-def run_quantum_game(p1_pos, p1_score, p2_pos, p2_score, p1_turns=0, p2_turns=0, occurrences=1, winning_score=21):
-    global QUANTUM_WINS_P1
-    global QUANTUM_WINS_P2
-    logger.debug(f"{p1_pos}, {p1_score}, {p2_pos}, {p2_score}, {p1_turns}, {p2_turns}, {occurrences}")
-    if p1_score >= winning_score:
-        QUANTUM_WINS_P1 += occurrences
-        logger.debug(f"P1 won {occurrences} more times!")
-        return QUANTUM_WINS_P1, QUANTUM_WINS_P2
-    if p2_score >= winning_score:
-        QUANTUM_WINS_P2 += occurrences
-        logger.debug(f"P2 won {occurrences} more times!")
-        return QUANTUM_WINS_P1, QUANTUM_WINS_P2
+def run_quantum_game(p1_pos, p1_score, p2_pos, p2_score, p1_turn=True, winning_score=21):
+    global GAMES
+    global TRACE
+    game_tuple = (p1_pos, p1_score, p2_pos, p2_score, p1_turn)
     
-    if p1_turns <= p2_turns:
-        s, p = score(p1_pos, 3)
-        run_quantum_game(p, p1_score+s, p2_pos, p2_score, p1_turns+1, p2_turns, occurrences)
-        s, p = score(p1_pos, 4)
-        run_quantum_game(p, p1_score+s, p2_pos, p2_score, p1_turns+1, p2_turns, occurrences * 3)
-        s, p = score(p1_pos, 5)
-        run_quantum_game(p, p1_score+s, p2_pos, p2_score, p1_turns+1, p2_turns, occurrences * 6)
-        s, p = score(p1_pos, 6)
-        run_quantum_game(p, p1_score+s, p2_pos, p2_score, p1_turns+1, p2_turns, occurrences * 7)
-        s, p = score(p1_pos, 7)
-        run_quantum_game(p, p1_score+s, p2_pos, p2_score, p1_turns+1, p2_turns, occurrences * 6)
-        s, p = score(p1_pos, 8)
-        run_quantum_game(p, p1_score+s, p2_pos, p2_score, p1_turns+1, p2_turns, occurrences * 3)
-        s, p = score(p1_pos, 9)
-        run_quantum_game(p, p1_score+s, p2_pos, p2_score, p1_turns+1, p2_turns, occurrences) 
-        
+    if logger.level <= logging.DEBUG:
+        logger.debug(game_tuple)
+        TRACE += 1
+        if TRACE == 10:
+            raise ValueError
+    
+    
+    
+    if game_tuple in GAMES:
+        pass
+    
+    elif p1_score >= winning_score:
+        # logger.debug(f"set {game_tuple} to 1, 0")
+        GAMES[game_tuple] = np.array([1, 0], dtype=np.int64)
+        return GAMES[game_tuple]
+
+    elif p2_score >= winning_score:
+        # logger.debug(f"set {game_tuple} to 0, 1")
+        GAMES[game_tuple] = np.array((1, 0), dtype=np.int64)
+        return GAMES[game_tuple]
+    
     else:
-        s, p = score(p2_pos, 3)
-        run_quantum_game(p1_pos, p1_score, p, p2_score+s, p1_turns, p2_turns+1, occurrences)
-        s, p = score(p2_pos, 4)
-        run_quantum_game(p1_pos, p1_score, p, p2_score+s, p1_turns, p2_turns+1, occurrences * 3)
-        s, p = score(p2_pos, 5)
-        run_quantum_game(p1_pos, p1_score, p, p2_score+s, p1_turns, p2_turns+1, occurrences * 6)
-        s, p = score(p2_pos, 6)
-        run_quantum_game(p1_pos, p1_score, p, p2_score+s, p1_turns, p2_turns+1, occurrences * 7)
-        s, p = score(p2_pos, 7)
-        run_quantum_game(p1_pos, p1_score, p, p2_score+s, p1_turns, p2_turns+1, occurrences * 6)
-        s, p = score(p2_pos, 8)
-        run_quantum_game(p1_pos, p1_score, p, p2_score+s, p1_turns, p2_turns+1, occurrences * 3)
-        s, p = score(p2_pos, 9)
-        run_quantum_game(p1_pos, p1_score, p, p2_score+s, p1_turns, p2_turns+1, occurrences)
-          
+        tallies = np.array([0, 0], dtype=np.int64)
+        if p1_turn:
+            s, p = score(p1_pos, 3)
+            tallies += 1 * run_quantum_game(p, p1_score+s, p2_pos, p2_score, False)
+            s, p = score(p1_pos, 4)
+            tallies += 3 * run_quantum_game(p, p1_score+s, p2_pos, p2_score, False)
+            s, p = score(p1_pos, 5)
+            tallies += 6 * run_quantum_game(p, p1_score+s, p2_pos, p2_score, False)
+            s, p = score(p1_pos, 6)
+            tallies += 7 * run_quantum_game(p, p1_score+s, p2_pos, p2_score, False)
+            s, p = score(p1_pos, 7)
+            tallies += 6 * run_quantum_game(p, p1_score+s, p2_pos, p2_score, False)
+            s, p = score(p1_pos, 8)
+            tallies += 3 * run_quantum_game(p, p1_score+s, p2_pos, p2_score, False)
+            s, p = score(p1_pos, 9)
+            tallies += 1 * run_quantum_game(p, p1_score+s, p2_pos, p2_score, False)
+            GAMES[game_tuple] = tallies
+            logger.debug(f"set {game_tuple} to {tallies}")
+            
+        else:
+            # take this turn and explode all the universes
+            s, p = score(p2_pos, 3)
+            tallies += 1 * run_quantum_game(p1_pos, p1_score, p, p2_score+s, True)
+            s, p = score(p2_pos, 4)
+            tallies += 6 * run_quantum_game(p1_pos, p1_score, p, p2_score+s, True)
+            s, p = score(p2_pos, 5)
+            tallies += 6 * run_quantum_game(p1_pos, p1_score, p, p2_score+s, True)
+            s, p = score(p2_pos, 6)
+            tallies += 7 * run_quantum_game(p1_pos, p1_score, p, p2_score+s, True)
+            s, p = score(p2_pos, 7)
+            tallies += 6 * run_quantum_game(p1_pos, p1_score, p, p2_score+s, True)
+            s, p = score(p2_pos, 8)
+            tallies += 3 * run_quantum_game(p1_pos, p1_score, p, p2_score+s, True)
+            s, p = score(p2_pos, 9)
+            tallies += 1 * run_quantum_game(p1_pos, p1_score, p, p2_score+s, True)
+            logger.debug(f"set {game_tuple} to {tallies}")
+            GAMES[game_tuple] = tallies
+    
+    logger.debug(len(GAMES))
+    return GAMES[game_tuple]
+              
 
 def main():
     logger.setLevel(level=logging.INFO)

@@ -27,6 +27,9 @@ def test_all(test_data):
     assert loser == 745
     assert rolls == 993
 
+    # p1_wins, p2_wins = run_quantum_game(p1, 20, p2, 0)
+    # assert p1_wins == 444356092776315
+    # assert p2_wins == 341960390180808
 
     p1_wins, p2_wins = run_quantum_game(p1, 0, p2, 0)
     assert p1_wins == 444356092776315
