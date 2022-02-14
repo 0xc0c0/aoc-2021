@@ -1,4 +1,3 @@
-from numpy.lib.function_base import gradient
 import pytest
 from .solve import *
 
