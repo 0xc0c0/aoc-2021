@@ -59,15 +59,15 @@ def test_parse_input(test_data):
     
 def test_all_improved(test_data, test_data2):
     instructions = parse_data(test_data)
-    df = run(instructions)
-    check = count_dataframe(df)
+    cuboids_on, sparse_grid = run(instructions)
+    check = count_cuboid_lights(cuboids_on, sparse_grid)
     assert check == 590784
     
     instructions = parse_data(test_data2)
-    df = run(instructions)
-    check = count_dataframe(df)
+    cuboids_on, sparse_grid = run(instructions)
+    check = count_cuboid_lights(cuboids_on, sparse_grid)
     assert check == 474140
     
-    df = run(instructions, inside_cube_only=False)
-    check = count_dataframe(df)
+    cuboids_on, sparse_grid = run(instructions, inside_cube_only=False)
+    check = count_cuboid_lights(cuboids_on, sparse_grid)
     assert check == 2758514936282235

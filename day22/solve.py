@@ -125,49 +125,17 @@ def init_sparse_grid(instructions, inside_cube_only=True):
     
     return {'X': X, 'Y': Y, 'Z': Z}
 
-    # logger.debug(f"sparse matrix has roughly {len(X) * len(Y) * len(Z)} bins")
-
-    # sparse_grid = list()
-    # for xi, x in enumerate(X):
-    #     logger.debug(f"sparse_grid len: {len(sparse_grid)}, size: {sys.getsizeof(sparse_grid)}")
-    #     for yi, y in enumerate(Y):
-    #         for zi, z in enumerate(Z):
-    #             size = 0
-    #             # higher outside edges don't represent any 'ons'
-    #             if (xi != len(X) - 1 and 
-    #                 yi != len(Y) - 1 and 
-    #                 zi != len(Z) - 1):
-    #                 #get deltas to next grid point on each axis to get representative volume for this sparse grid point
-    #                 dx = X[xi + 1] - x
-    #                 dy = Y[yi + 1] - y
-    #                 dz = Z[zi + 1] - z
-    #                 size = dx * dy * dz
-    #             sparse_grid.append([x,y,z,0,size])
-                
-    # logger.debug(f"sparse_grid has {len(sparse_grid)} entries")
-    # return sparse_grid
-
-# def init_sparse_dataframe(sparse_grid):
-#     df = pd.DataFrame(sparse_grid, columns=['x','y','z','on','size'])
-#     df = df.astype({"x": np.int32, 
-#                     "y": np.int32, 
-#                     "z": np.int32, 
-#                     "on": np.int8, 
-#                     "size": np.int32})
-#     df = df.set_index(['x','y','z'])
-#     return df
-
 def apply_sparse_instruction(instruction, sparse_grid, cuboids_on: set):
     x0, x1 = instruction.ranges['x']
     y0, y1 = instruction.ranges['y']
     z0, z1 = instruction.ranges['z']
     initial_len = len(cuboids_on)
     for xi, x in enumerate(sparse_grid['X']):
-        if x >= x0 and x < x1:
+        if x >= x0 and x <= x1:
             for yi, y in enumerate(sparse_grid['Y']):
-                if y >= y0 and y < y1:
+                if y >= y0 and y <= y1:
                     for zi, z in enumerate(sparse_grid['Z']):
-                        if z >= z0 and z < z1:
+                        if z >= z0 and z <= z1:
                             if instruction.on:
                                 cuboids_on.add((x,y,z))
                             else:
@@ -199,35 +167,17 @@ def count_cuboid_lights(cuboids_on, sparse_grid, on=True):
                     count += dx * dy * dz
     return count    
 
-def count_dataframe(df):
-    # for xi, x in enumerate(X):
-    #     for yi, y in enumerate(Y):
-    #         for zi, z in enumerate(Z):
-    #             size = 0
-    #             # higher outside edges don't represent any 'ons'
-    #             if (xi != len(X) - 1 and 
-    #                 yi != len(Y) - 1 and 
-    #                 zi != len(Z) - 1):
-    #                 #get deltas to next grid point on each axis to get representative volume for this sparse grid point
-    #                 dx = X[xi + 1] - x
-    #                 dy = Y[yi + 1] - y
-    #                 dz = Z[zi + 1] - z
-    #                 size = dx * dy * dz
-    #             sparse_grid.append([x,y,z,0,size])
-    return df.query('on == 1')['size'].sum()
-
 def main():
     logger.setLevel(level=logging.DEBUG)
     with open("input.txt") as f:
         data = f.read()
-    
     instructions = parse_data(data)
-    cube = Cube()
-    apply_instructions(instructions, cube)
-    answer = count_cubes(cube)
+    
+    cuboids_on, sparse_grid = run(instructions)
+    answer = count_cuboid_lights(cuboids_on, sparse_grid)
     logger.info(f"Puzzle1: Cubes on with interior instructions only: {answer}")
-    df = run(instructions, inside_cube_only=False)
-    answer = count_dataframe(df)
+    cuboids_on, sparse_grid = run(instructions, inside_cube_only=False)
+    answer = count_cuboid_lights(cuboids_on, sparse_grid)
     logger.info(f"Puzzle2: Cubes on after all instructions: {answer}")
     
 if __name__ == '__main__':
