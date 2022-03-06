@@ -8,24 +8,20 @@ def test_data():
     return text
 
 def test_parse_input(test_data):
-    locations = parse_data(test_data)
-    assert type(locations) == tuple
-    assert locations[11] == 'B'
-    assert locations[18] == 'A'
-    assert locations.count('A') == 2
-    assert locations.count('B') == 2
-    assert locations.count('C') == 2
-    assert locations.count('D') == 2
+    game_state = parse_data(test_data)
+    assert type(game_state) == GameState
+    assert game_state.B == (11, 15)
     
 def test_all(test_data):
-    locations = parse_data(test_data)
-    moves = find_good_available_moves(locations)
-    assert not moves['A']
-    assert len(moves['C']) == 1
-    assert len(moves['B']) == 2
-    assert moves['B'].count((11,2)) == 1
-    assert moves['B'].count((15,6)) == 1
-    assert len([moves[k] for k in moves]) == 4
+    game = parse_data(test_data)
+    check = find_path(7,12)
+    assert check == [6, 5, 4, 3, 2, 11, 12]
+    check = find_path(7,11)
+    assert check == [6, 5, 4, 3, 2, 11]
     
-    check = find_lowest_cost_solve(locations)
-    assert check == 12521
+    hops = init_available_hops()
+    assert 4 not in hops
+    assert hops[10][14] == [9,8,7,6,5,4,13,14]
+    assert hops[3][14] == [4,13,14]
+    cost = find_lowest_cost_solve(game)
+    assert cost == 12521
