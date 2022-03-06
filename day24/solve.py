@@ -14,6 +14,12 @@ def parse_data(text_data):
     data = [[int(x) for x in list(line)] for line in text_data.strip('\n').strip().split('\n')]
     return np.array(data)
 
+# make instructions
+
+# check sets of 18 instructions
+
+# find all values that keep z == 0 at the end of the set, keep/save the largest number
+
 def main():
     logger.setLevel(level=logging.INFO)
     data = get_file_data()
