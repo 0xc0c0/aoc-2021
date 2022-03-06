@@ -17,9 +17,10 @@ def get_file_data(fn='input.txt'):
 ##0  1  2  3  4  5  6  7  8  9 10##
 ########11####13####15####17#######
 ########12####14####16####18#######
+########19####21####23####25#######
+########20####22####24####26#######
 
-#convert this to lookups with multipliers for '# hops' based on rules
-AVAILABLE_DIRECT_MOVES={
+AVAILABLE_DIRECT_MOVES_DEEP={
     0: [1],
     1: [0,2],
     2: [1,3,11],
@@ -32,13 +33,21 @@ AVAILABLE_DIRECT_MOVES={
     9: [8,10],
     10:[9],
     11:[2,12],
-    12:[11],
+    12:[11,19],
     13:[4,14],
-    14:[13],
+    14:[13,21],
     15:[6,16],
-    16:[15],
+    16:[15,23],
     17:[8,18],
-    18:[17]
+    18:[17,25],
+    19:[12,20],
+    20:[19],
+    21:[14,22],
+    22:[21],
+    23:[16,24],
+    24:[23],
+    25:[18,26],
+    26:[25]
 }
 
 HALLWAY=[0,1,2,3,4,5,6,7,8,9,10]
@@ -64,7 +73,7 @@ def find_path(src, dest, saved_path=[]):
     if src == dest:
         return saved_path
     
-    for option in AVAILABLE_DIRECT_MOVES[src]:
+    for option in AVAILABLE_DIRECT_MOVES_DEEP[src]:
         if option in saved_path:
             continue
         new_path = saved_path + [option]
@@ -123,10 +132,9 @@ class GameState:
         tmp.remove(old_location)
         tmp.add(new_location)
         new[letter] = tuple(tmp)
-        # logger.debug(f"new is: {new}")
         return GameState.from_dict(new)
 
-TARGET_GAME = GameState(A=(11,12), B=(13,14), C=(15,16), D=(17,18))
+TARGET_GAME = GameState(A=(11,12,19,20), B=(13,14,21,22), C=(15,16,23,24), D=(17,18,25,26))
 TARGETS = TARGET_GAME.get_dict()
 
 def in_same_room(src, dest):
@@ -139,9 +147,9 @@ def in_same_room(src, dest):
     return False
 
 def init_available_hops():
-    hops = [dict() for i in range(len(AVAILABLE_DIRECT_MOVES))]
-    for src in range(len(AVAILABLE_DIRECT_MOVES)):
-        for dest in range(len(AVAILABLE_DIRECT_MOVES)):
+    hops = [dict() for i in range(len(AVAILABLE_DIRECT_MOVES_DEEP))]
+    for src in range(len(AVAILABLE_DIRECT_MOVES_DEEP)):
+        for dest in range(len(AVAILABLE_DIRECT_MOVES_DEEP)):
             if in_same_room(src,dest):
                 continue
             if dest in hops[src]:
@@ -158,9 +166,9 @@ def init_available_hops():
 
 def parse_data(text_data):
     lines = text_data.strip('\n').strip().split('\n')
-    index_order = [11,13,15,17,12,14,16,18]
+    index_order = [11,13,15,17,12,14,16,18,19,21,23,25,20,22,24,26]
     results = re.findall(r'#([A-D])',text_data)
-    assert len(results) == 8
+    assert len(results) == 16
     o = 0
     data = {
         'A': tuple(SortedList([index_order[i] for i, v in enumerate(results) if v == 'A'])),
@@ -176,22 +184,28 @@ def is_path_blocked(all_taken_spots, path):
             return True
     return False
 
+def is_room_ready(location: int, letter: str, game: GameState):
+    if location in TARGETS[letter]:
+        game_lookup = game.get_dict()
+        starter_index = TARGETS[letter].index(location)
+        for test_location in TARGETS[letter][starter_index + 1:]:
+            if test_location not in game_lookup[letter]:
+                return False
+        return True
+    
+    return False 
+
 def find_reasonable_moves(game: GameState, hops: dict):
     # logger.debug(f"checking moves for: {game}")
     next_moves = list()
     locations = game.get_list()
-    game_lookup = game.get_dict()
     all_taken_locations = game.get_all_taken_spots()
     
     for letter, location in locations:
-        #if bottom position and already correctly filled/finished, skip changing it
-        if TARGETS[letter][FIRST_FILL_I] == location:
+        #room is clean here, nothing to do
+        if is_room_ready(location, letter, game):              
             continue
-        #if top position and both slots are correctly filled, skip it
-        elif (TARGETS[letter][SECOND_FILL_I] == location and 
-                [letter, FIRST_FILL_I] in locations):
-            continue
-               
+
         #now iterate through options and make sure it's worth the time
         for available_location in hops[location]:
             path = hops[location][available_location]
@@ -204,10 +218,9 @@ def find_reasonable_moves(game: GameState, hops: dict):
             if available_location not in HALLWAY:
                 if available_location not in TARGETS[letter]:
                     continue
-                
-                secondary, primary = TARGETS[letter]
-                # logger.debug(f"letter: {letter}, primary: {primary}, secondary: {secondary}")
-                if (available_location == secondary) and (primary not in game_lookup[letter]):
+
+                #if location isn't ready to receive, don't waste time
+                if not is_room_ready(available_location, letter, game):
                     continue
             
             #build new game for next move
@@ -269,13 +282,10 @@ def find_lowest_cost_solve(starter_game: GameState):
         
 def main():
     logger.setLevel(level=logging.INFO)
-    with open("input.txt") as f:
-        data = f.read()
-       
+    data = get_file_data(fn='input2.txt')
     game = parse_data(data)
     answer = find_lowest_cost_solve(game)
-    logger.info(f"Puzzle1: Lowest Cost to Solve: {answer}")
-    logger.info(f"Use solve2.py for Puzzle2")
+    logger.info(f"Puzzle2: Lowest Cost to Solve: {answer}")
     
 if __name__ == '__main__':
     main()
